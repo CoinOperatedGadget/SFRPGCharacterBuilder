@@ -1,0 +1,32 @@
+EquipmentScreen:
+    name: 'General Tab'
+    fullscreen: True
+    BoxLayout:
+        orientation:'vertical'
+        BoxLayout:
+            size_hint_y:None
+            orientation:'horizontal'
+            Label:
+                text: 'Skill'
+            Label:
+                text: ''
+            Label:
+                text: 'Ranks'
+            Label:
+                text: ''
+            Label:
+                text: 'Misc Bonuses'
+            Label:
+                text: 'Total'
+        ScrollView:
+            BoxLayout:
+                id: skillcontainer
+                size_hint_y:None
+                height:sum(x.height for x in self.children)
+                orientation:'vertical'
+        BoxLayout:
+            size_hint_y:None
+            orientation:'horizontal'
+            Label:
+                id: skillpointslabel
+                text: 'Skill Points Remaining:'

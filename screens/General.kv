@@ -1,0 +1,163 @@
+GeneralScreen:
+    name: 'General Tab'
+    fullscreen: True
+    ScrollView:
+        BoxLayout:
+            size_hint_y:None
+            height:sum(x.height for x in self.children)
+            orientation:'vertical'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Name:'
+                TextInput:
+                    id: charname
+                    text: 'Test Character'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Race:'
+                Spinner:
+                    id: racespinner
+                    text: 'Android'
+                    on_text: root.update_screen_widgets()
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Theme:'
+                Spinner:
+                    id: themespinner
+                    text: 'Bounty Hunter'
+                    on_text: root.update_screen_widgets()
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Str:'
+                Spinner:
+                    id: strbase
+                    text: '0'
+                    values: [str(i) for i in range(0,9)]
+                    on_text: root.update_screen_widgets()
+                Label:
+                    id: strtotal
+                    text: '10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Dex:'
+                Spinner:
+                    id: dexbase
+                    text: '0'
+                    values: [str(i) for i in range(0,9)]
+                    on_text: root.update_screen_widgets()
+                Label:
+                    id: dextotal
+                    text: '10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Con:'
+                Spinner:
+                    id: conbase
+                    text: '0'
+                    values: [str(i) for i in range(0,9)]
+                    on_text: root.update_screen_widgets()
+                Label:
+                    id: contotal
+                    text: '10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Int:'
+                Spinner:
+                    id: intbase
+                    text: '0'
+                    values: [str(i) for i in range(0,9)]
+                    on_text: root.update_screen_widgets()
+                Label:
+                    id: inttotal
+                    text: '10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Wis:'
+                Spinner:
+                    id: wisbase
+                    text: '0'
+                    values: [str(i) for i in range(0,9)]
+                    on_text: root.update_screen_widgets()
+                Label:
+                    id: wistotal
+                    text: '10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Cha:'
+                Spinner:
+                    id: chabase
+                    text: '0'
+                    values: [str(i) for i in range(0,9)]
+                    on_text: root.update_screen_widgets()
+                Label:
+                    id: chatotal
+                    text: '10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    id: pblabel
+                    text: 'Point Buy: 0'
+                Label:
+                    id: pllabel
+                    text: 'Points Left: 10'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    id: staminalabel
+                    text: 'Total Stamina:'
+                Label:
+                    id: hplabel
+                    text: 'Total HP:'
+                Label:
+                    id: resolvelabel
+                    text: 'Total Resolve:'
+            Button:
+                text: 'Debug Button!'
+                on_press: root.print_stuff()
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Gender:'
+                TextInput:
+                    id: gender
+                    text: ''
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Home World:'
+                TextInput:
+                    id: homeworld
+                    text: ''
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Alignment:'
+                Spinner:
+                    id: alignment
+                    text: 'TN'
+                    values: ('LG','NG','CG','LN','N','CN','LE','NE','CE')
+                    on_text: root.update_screen_widgets()
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Deity:'
+                TextInput:
+                    id: deity
+                    text: ''
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text: 'Player:'
+                TextInput:
+                    id: player
+                    text: ''
+

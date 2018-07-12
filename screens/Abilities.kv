@@ -1,0 +1,20 @@
+<AbilitySelector@BoxLayout>:
+    orientation:'horizontal'
+
+AbilityScreen:
+    name: 'General Tab'
+    fullscreen: True
+    ScrollView:
+        BoxLayout:
+            id: abilitycontainer
+            size_hint_y:None
+            height:sum(x.height for x in self.children)
+            orientation:'vertical'
+            BoxLayout:
+                orientation:'horizontal'
+                Label:
+                    text:'Show Racial Abilities'
+                CheckBox:
+                    id: racialcheckbox
+                    active: False
+                    on_active: root.racial_switch_toggle(self.active)

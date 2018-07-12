@@ -1,0 +1,29 @@
+<ClassSelector@BoxLayout>:
+    orientation:'horizontal'
+    Label:
+        id: classlabel
+        text: 'Class:'
+    Spinner: 
+        id: classsel
+        text: 'Choose Class'
+        values: ('Envoy','Operative','Soldier')
+        on_text: root.class_change()
+            
+ClassScreen:
+    name: 'General Tab'
+    fullscreen: True
+    ScrollView:
+        BoxLayout:
+            id: classcontainer
+            size_hint_y:None
+            height:sum(x.height for x in self.children)
+            orientation:'vertical'
+            BoxLayout:
+                orientation: 'horizontal'
+                Label:
+                    text: 'Max Level:'
+                Spinner: 
+                    id: levelsel
+                    text: 'Select Max Level'
+                    values: [str(i) for i in range(1,21)]
+                    on_text: root.refresh_class_levels(int(self.text))

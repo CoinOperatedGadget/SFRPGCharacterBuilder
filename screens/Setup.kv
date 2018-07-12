@@ -1,0 +1,16 @@
+TabScreen:
+    name: 'Setup Tab'
+    fullscreen: True
+    ScrollView:
+        BoxLayout:
+            size_hint_y:None
+            height:sum(x.height for x in self.children)
+            orientation:'vertical'
+            Label:
+                text: 'Select Sources:'
+            BoxLayout:
+                orientation: 'horizontal'
+                Label:
+                    text: 'CRB'
+                CheckBox: 
+
