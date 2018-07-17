@@ -10,8 +10,11 @@
             ActionView:
                 use_separator: True
                 ActionPrevious:
-                    title: 'Action Bar'
+                    title: ' '
                     with_previous: False
+                    #app_icon_width: 1
+                    #app_icon_height: 0
+                    #minimum_width: 10
                 ActionButton:
                     id: setupbut
                     text: 'Setup'
@@ -36,6 +39,9 @@
                 ActionButton:
                     text: 'Skills'
                     on_release: app.switch_screen('Skills')
+                ActionButton:
+                    text: 'Spells'
+                    on_release: app.switch_screen('Spells')
                 ActionButton:
                     text: 'Equipment'
                     icon: './app_resources/icon1.png'
@@ -130,11 +136,38 @@
         pos: root.pos
         orientation: "vertical"
         ScrollView:
-            Label:
-                id: licenselabel
-                size_hint_y: None
-                text_size: root.width, None
-                size: self.texture_size
+            GridLayout:
+                size_hint_y:None
+                height: self.minimum_height
+                cols: 1
+                Label:
+                    id: licenselabel
+                    size_hint_y: None
+                    text_size: root.width, None
+                    size: self.texture_size
+                    
+<TextDialog>:
+    size_hint: (0.9, 0.9)
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        ScrollView:
+            GridLayout:
+                size_hint_y:None
+                height: self.minimum_height
+                cols: 1
+                Label:
+                    id: textlabel
+                    size_hint_y: None
+                    text_size: root.width*.9, None
+                    size: self.texture_size
+        Button:
+            size_hint_y: None
+            size: self.texture_size
+            text: 'Close'
+            on_press: root.dismiss()
+
 
 <ChoicePopup@Popup>:
     auto_dismiss: False

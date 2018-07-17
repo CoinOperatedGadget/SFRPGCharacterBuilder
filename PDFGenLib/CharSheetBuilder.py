@@ -1579,6 +1579,19 @@ def MakeSFCS(CharacterDict):
 
    # Spells
    SpellSpaceNumber = [6,6,6,6,5,4,4]
+   SpellsKnown = [0,0,0,0,0,0,0]
+   SpellsPerDay = [0,0,0,0,0,0,0]
+   SpellNames = [[],[],[],[],[],[],[],]
+   for spellList in cd['spellsknown']:
+      for i in range(min(len(cd['spellsknown'][spellList]),7)):
+         SpellsKnown[i] += cd['spellsknown'][spellList][i]
+   for spellList in cd['spellsperday']:
+      for i in range(min(len(cd['spellsperday'][spellList]),7)):
+         SpellsPerDay[i] += cd['spellsperday'][spellList][i]
+   for spellList in cd['spells']:
+      for i in range(min(len(cd['spells'][spellList]),7)):
+         for j in range(min(len(cd['spells'][spellList][i]),7)):
+            SpellNames[i].append(cd['spells'][spellList][i][j]['name'])
    SpellLabel = ['0','1ST','2ND','3RD','4TH','5TH','6TH']
    ylevel = 0.93
    for i in range(7):
@@ -1590,7 +1603,7 @@ def MakeSFCS(CharacterDict):
          c.drawCentredString(6.995*inch,(10.875-(ylevel-.275))*inch, 'SPELLS PER DAY')
          c.drawCentredString(7.705*inch,(10.875-(ylevel-.275))*inch, 'SPELL SLOTS USED')
          c.acroForm.textfield(name='SpellsKnownLvl'+str(i),
-            value = '',
+            value = str(SpellsKnown[i]),
             x=6.01*inch, y=(10.875-ylevel)*inch,
             borderStyle='bevelled',
             forceBorder=True,
@@ -1599,7 +1612,7 @@ def MakeSFCS(CharacterDict):
             fontSize=10,
             )
          c.acroForm.textfield(name='SpellsPerDayLvl'+str(i),
-            value = '',
+            value = str(SpellsPerDay[i]),
             x=6.69*inch, y=(10.875-ylevel)*inch,
             borderStyle='bevelled',
             forceBorder=True,
@@ -1620,7 +1633,7 @@ def MakeSFCS(CharacterDict):
          c.setFont("Electrolize",8)
          c.drawRightString(6.65*inch,(10.875-(ylevel))*inch, 'SPELLS KNOWN')
          c.acroForm.textfield(name='SpellsKnownLvl'+str(i),
-            value = '',
+            value = str(SpellsKnown[i]),
             x=6.69*inch, y=(10.875-ylevel)*inch,
             borderStyle='bevelled',
             forceBorder=True,
@@ -1631,8 +1644,11 @@ def MakeSFCS(CharacterDict):
 
       ylevel += .23
       for j in range(SpellSpaceNumber[i]):
+         spellname = ''
+         if len(SpellNames[i]) > j:
+            spellname = SpellNames[i][j]
          c.acroForm.textfield(name='SpellSlotLevel'+str(i)+'Slot'+str(j),
-            value = '',
+            value = spellname,
             x=5.62*inch, y=(10.875-ylevel)*inch,
             borderStyle='underlined',
             forceBorder=True,

@@ -3,6 +3,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
+from kivy.uix.tabbedpanel import TabbedPanelItem
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.app import App
@@ -30,11 +31,16 @@ class LicenseDialog(FloatLayout):
    licenselabel = ObjectProperty(None)
    cancel = ObjectProperty(None)
 
+class TextDialog(Popup):
+   textlabel = ObjectProperty(None)
+   cancel = ObjectProperty(None)
+
 class TabScreen(Screen):
    fullscreen = BooleanProperty(False)
    def __init__(self, *args):
       self.rm = App.get_running_app().rm
       self.character = App.get_running_app().character
+      self.textPopup = None
       return super(TabScreen, self).__init__(*args)
 
    def refresh_screen(self, *args):
@@ -75,7 +81,6 @@ class ChoicePopup(Popup):
       self.choiceLabel.bind(texture_size=self.choiceLabel.setter('size'))
    def refresh(self):
       # Remove old stuff...
-      print(self.currentChoiceButton)
       if not(self.currentChoiceButton == None):
          self.currentChoiceButton.background_color = (1.0, 1.0, 1.0, 1.0)
          if not(self.currentChoiceButton.valid):
@@ -486,6 +491,198 @@ class FeatScreen(TabScreen):
    def refresh_screen(self, *args):
       self.update_feat_widgets()
 
+# This section needs a lot of work.  Specifically the SpellPopup needs to stop dynamically creating
+# widgets.  That's too slow especially on Android.
+class SpellScreen(TabScreen):
+   def __init__(self, *args):
+      self.widgetList = []
+      self.lvlWidgetList = []
+      super(SpellScreen, self).__init__(*args)
+      Clock.schedule_once(self._setup_options)
+
+   def _setup_options(self, *args):
+      for i in range(20):
+         label = Label()
+         label.text = 'Level '+str(i+1)+':'
+         self.lvlWidgetList.append(label)
+      self.popup = SpellPopup()
+      self.update_spell_widgets()
+
+   def update_spell_widgets(self):
+      for i in self.lvlWidgetList:
+         self.ids.spellbuttoncontainer.remove_widget(i)
+      for i in self.widgetList:
+         self.ids.spellbuttoncontainer.remove_widget(i)
+      self.widgetList = []
+      for lvl in range(1,self.character.level+1):
+         self.ids.spellbuttoncontainer.add_widget(self.lvlWidgetList[lvl-1])
+         spellsKnownDict = self.character.get_spells_known_dict_at_level(lvl)
+         for sk in spellsKnownDict:
+            button = Button()
+            buttonString = sk
+            buttonString = buttonString + ' ' + str(spellsKnownDict[sk][0])
+            for i in range(1,len(spellsKnownDict[sk])):
+               buttonString = buttonString + '/' + str(spellsKnownDict[sk][i])
+            button.text = buttonString
+            button.bind(on_press = self.open_popup)
+            button.spelllist = sk
+            button.spellarray = spellsKnownDict[sk]
+            self.ids.spellbuttoncontainer.add_widget(button)
+
+   def refresh_screen(self, *args):
+      self.update_spell_widgets()
+
+   def open_popup(self, button, *args):
+      self.popup.spellList = button.spelllist
+      self.popup.spellArray = button.spellarray
+      self.popup.refresh()
+      self.popup.open()
+
+class SpellPopup(Popup):
+   def __init__(self, *args):
+      self.rm = App.get_running_app().rm
+      self.character = App.get_running_app().character
+      self.spellList = None
+      self.spellArray = None
+      self.level = 1
+      self.cb = None
+      self.loadedSpellList = None
+      self.loadedSpellListName = None
+      self.spellPanels = []
+      self.activeSpellPanels = []
+      self.choiceLabel = None
+      self.displaySpellChoiceItem = None
+      self.spellNames = [[],[],[],[],[],[],[],]
+      super(SpellPopup, self).__init__(*args)
+      Clock.schedule_once(self._setup_options)
+
+   def _setup_options(self, *args):
+      for i in range(10):
+         scp = SpellChoicePanel()
+         scp.text = str(i)
+         self.spellPanels.append(scp)
+      self.choiceLabel = Label(text='',size_hint_y=None)
+      self.choiceLabel.bind(width=lambda s, w:
+            s.setter('text_size')(s,(w,None)))
+      self.choiceLabel.bind(texture_size=self.choiceLabel.setter('size'))
+
+   def populate_spell_list(self,panel):
+      if (self.loadedSpellListName != self.spellList):
+         self.loadedSpellList = self.rm.get_spell_list_by_level(self.spellList)
+         self.loadedSpellListName = self.spellList
+      if (len(self.loadedSpellList) >= panel+1):
+         for spell in self.loadedSpellList[panel]:
+            sci = SpellChoiceItem()
+            sci.ids.spelllabel.text = spell['name']
+            sci.displaycb = self.display_spell_description
+            sci.selectcb = self.select_spell
+            sci.panel = panel
+            sci.spell = spell
+            if spell['name'] in self.spellNames[panel]:
+               sci.ids.spellcheckbox.active = True
+            # self.activeSpellPanels[panel].ids.choicelist.add_widget(sci)
+            self.activeSpellPanels[panel].add_spell_choice_item_widget(sci)
+
+   def update_spell_name_list(self):
+      spellNames = [[],[],[],[],[],[],[],]
+      spells = self.character.spells[self.level-1]
+      for spellList in spells:
+         for i in range(min(len(spells[spellList]),7)):
+            for j in range(min(len(spells[spellList][i]),7)):
+               spellNames[i].append(spells[spellList][i][j]['name'])
+      self.spellNames = spellNames
+
+   def refresh(self):
+      for asp in self.activeSpellPanels:
+         # asp.ids.choicelist.clear_widgets()
+         asp.clear_spell_widgets()
+         self.ids.spelltabbedpanel.remove_widget(asp)
+      self.activeSpellPanels = []
+      self.update_spell_name_list()
+      for i in range(len(self.spellArray)):
+         if self.spellArray[i] > 0:
+            self.ids.spelltabbedpanel.add_widget(self.spellPanels[i])
+            self.activeSpellPanels.append(self.spellPanels[i])
+            self.populate_spell_list(i)
+            self.update_spells_left(i)
+      if (len(self.activeSpellPanels) > 0):
+         self.ids.spelltabbedpanel.switch_to(self.activeSpellPanels[0])
+
+   def update_spells_left(self,panel):
+      self.activeSpellPanels[panel].ids.spellsknownleftlabel.text = 'Number of Spells Known Left: '+str(self.spellArray[panel] - self.activeSpellPanels[panel].get_num_selected())
+
+   def select_spell(self, panel):
+      # For now we won't enforce the number of spells known in case we miss any bonuses...
+      # # self.activeSpellPanels[panel].get_num_selected()
+      self.update_spells_left(panel)
+      pass # if
+
+
+   def display_spell_description(self, spellChoiceItem):
+      if (spellChoiceItem == self.displaySpellChoiceItem):
+         self.displaySpellChoiceItem.parent.remove_widget(self.choiceLabel)
+         self.displaySpellChoiceItem = None
+         return
+      if not(self.displaySpellChoiceItem == None):
+         self.displaySpellChoiceItem.parent.remove_widget(self.choiceLabel)
+      self.displaySpellChoiceItem = spellChoiceItem
+      self.choiceLabel.text = self.character.get_obj_description_string(self.displaySpellChoiceItem.spell)
+      self.displaySpellChoiceItem.parent.add_widget(self.choiceLabel,self.displaySpellChoiceItem.parent.children.index(self.displaySpellChoiceItem))
+      # self.displaySpellChoiceItem.parent.root.add_spell_description_widget(self.choiceLabel,self.displaySpellChoiceItem.parent.children.index(self.displaySpellChoiceItem))
+
+   def clear_spells(self):
+      for i in range(len(self.activeSpellPanels)):
+         self.activeSpellPanels[i].clear_selected_spells()
+         self.update_spells_left(i)
+
+   def confirm_spells(self):
+      spellArray = []
+      for i in range(len(self.activeSpellPanels)):
+         spellArray.append(self.activeSpellPanels[i].get_selected_spells())
+      self.character.spells[self.level-1][self.spellList] = spellArray
+      # Add them to character here...
+      self.dismiss()
+
+
+class SpellChoicePanel(TabbedPanelItem):
+   def __init__(self, *args):
+      self.rm = App.get_running_app().rm
+      self.character = App.get_running_app().character
+      self.spellChoiceItemArray = []
+      super(SpellChoicePanel, self).__init__(*args)
+      # Clock.schedule_once(self._setup_options)
+   def add_spell_choice_item_widget(self,widget,position=0):
+      self.ids.choicelist.add_widget(widget,position)
+      self.spellChoiceItemArray.append(widget)
+   def clear_spell_widgets(self):
+      self.ids.choicelist.clear_widgets()
+      self.spellChoiceItemArray = []
+   def add_spell_description_widget(self,widget,position=0):
+      self.ids.choicelist.add_widget(widget,position)
+   def get_num_selected(self):
+      numSelected = 0
+      # for widget in self.ids.choicelist.children:
+      for widget in self.spellChoiceItemArray:
+         if widget.ids.spellcheckbox.active:
+            numSelected += 1
+      return numSelected
+   def get_selected_spells(self):
+      spellList = []
+      # for widget in self.ids.choicelist.children:
+      for widget in self.spellChoiceItemArray:
+         if widget.ids.spellcheckbox.active:
+            spellList.append(widget.spell)
+      return spellList
+   def clear_selected_spells(self):
+      numSelected = 0
+      # for widget in self.ids.choicelist.children:
+      for widget in self.spellChoiceItemArray:
+         widget.ids.spellcheckbox.active = False
+      return numSelected
+
+class SpellChoiceItem(GridLayout):
+   pass
+
 
 class GeneralScreen(TabScreen):
    def __init__(self, *args):
@@ -618,6 +815,7 @@ class MainApp(App):
       self.character.rm = self.rm
       self.character.add_class(self.rm.get_item_by_name('Soldier'))
       self.curr_screen = ''
+      self.textPopup = TextDialog()
       self.switch_screen('Setup')
       for screen in self.screenStrings:
          self.load_screen(screen)
@@ -652,6 +850,7 @@ class MainApp(App):
       filepath = join(curdir, 'screens',screenid+'.kv')
       screen = Builder.load_file(filepath)
       self.screens[screenid] = screen
+      screen.textPopup = self.textPopup
       return screen
 
    def export_character(self):
@@ -671,13 +870,12 @@ class MainApp(App):
       self.root._popup.open()
 
    def open_license_dialog(self):
-      content = LicenseDialog(cancel=self.dismiss_popup)
       file = open('LICENSE.txt','r')
       licenseStr = file.read()
       file.close()
-      content.ids.licenselabel.text = licenseStr
-      self.root._popup = Popup(title="License Info", content=content, size_hint=(0.9, 0.9))
-      self.root._popup.open()
+      self.textPopup.ids.textlabel.text = licenseStr
+      self.textPopup.title = 'License Info'
+      self.textPopup.open()
 
    def save(self, path, filename):
       self.character.save(path+'/'+filename)

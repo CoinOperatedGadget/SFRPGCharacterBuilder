@@ -14,6 +14,7 @@ class ResourceManager:
       self.themes = []
       self.races = []
       self.abilities = []
+      self.spells = []
       self.book = None
       self.copyright = None
 
@@ -45,6 +46,10 @@ class ResourceManager:
          RuleBookLib.processAbility(item)
          self.abilities.append(item)
          return
+      if item['type'] == 'spell':
+         self.spells.append(item)
+         return
+      print(item)
       raise ValueError
 
    def get_item_by_name(self,name):
@@ -79,6 +84,22 @@ class ResourceManager:
          if (type == i['type'] or type == 'any') and (subtype == i['subtype'] or subtype == 'any'):
             itemList.append(i)
       return itemList
+      
+   def get_spell_list(self, name):
+      spellList = []
+      for spell in self.spells:
+         if name in spell['spelllists']:
+            spellList.append(spell)
+      return spellList
+      
+   def get_spell_list_by_level(self, name):
+      spellList = self.get_spell_list(name)
+      spellListByLevel = []
+      for spell in spellList:
+         while spell['spelllists'][name]+1 > len(spellListByLevel):
+            spellListByLevel = spellListByLevel + [[]]
+         spellListByLevel[spell['spelllists'][name]].append(spell)
+      return spellListByLevel
 
    def save(self, filename):
       file = open(filename,'wb')
@@ -99,4 +120,4 @@ class ResourceManager:
 
    @property
    def all(self):
-      return self.classes + self.feats + self.items + self.themes + self.races + self.abilities
+      return self.classes + self.feats + self.items + self.themes + self.races + self.abilities + self.spells

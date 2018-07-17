@@ -1,0 +1,63 @@
+SpellScreen:
+    name: 'Spell Tab'
+    fullscreen: True
+    BoxLayout:
+        orientation:'vertical'
+        ScrollView:
+            BoxLayout:
+                id: spellbuttoncontainer
+                size_hint_y:None
+                height:sum(x.height for x in self.children)
+                orientation:'vertical'
+
+<SpellPopup>
+    auto_dismiss: False
+    title: 'Select Spells Known:'
+    BoxLayout:
+        id: spellbuttoncontainer
+        orientation:'vertical'
+        TabbedPanel:
+            id: spelltabbedpanel
+            do_default_tab: False
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y:None
+            Button:
+                text: 'Done'
+                size_hint_y:None
+                on_release: root.confirm_spells()
+            Button:
+                text: 'Clear'
+                size_hint_y:None
+                on_release: root.clear_spells()
+
+<SpellChoicePanel>
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: spellsknownleftlabel
+            text: 'Number of Spells Known Left: 0'
+            size_hint_y: None
+            #text_size: root.width, None
+            size: self.texture_size
+        ScrollView:
+            GridLayout:
+                id: choicelist
+                size_hint_y:None
+                height: self.minimum_height
+                cols: 1
+
+<SpellChoiceItem>
+    size_hint_y:None
+    height: self.minimum_height
+    cols: 2
+    Button:
+        id: spelllabel
+        size_hint_y: None
+        #text_size: root.width, None
+        size: self.texture_size
+        on_press: root.displaycb(root)
+    CheckBox:
+        id: spellcheckbox
+        active: False
+        on_active: root.selectcb(root.panel)

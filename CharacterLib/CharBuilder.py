@@ -41,6 +41,7 @@ class StarfinderCharacterObject:
       self._setLevel = 1
       self._feats = []
       self._abilities = []
+      self._spells = [{}]*20
       self._addBonusesToEffectsFromObj(self._createNormalFeatArray())
       self._skills = {'Acrobatics':[0]*20,'Athletics':[0]*20,'Bluff':[0]*20,'Computers':[0]*20,'Culture':[0]*20,'Diplomacy':[0]*20,'Disguise':[0]*20,'Engineering':[0]*20,'Intimidate':[0]*20,'LifeScience':[0]*20,'Medicine':[0]*20,'Mysticism':[0]*20,'Perception':[0]*20,'PhysicalScience':[0]*20,'Piloting':[0]*20,'Profession':[0]*20,'Profession2':[0]*20,'SenseMotive':[0]*20,'SleightOfHand':[0]*20,'Stealth':[0]*20,'Survival':[0]*20}
       self._skillAbilities = {'Acrobatics':'dex','Athletics':'str','Bluff':'cha','Computers':'int','Culture':'int','Diplomacy':'cha','Disguise':'cha','Engineering':'int','Intimidate':'cha','LifeScience':'int','Medicine':'int','Mysticism':'wis','Perception':'wis','PhysicalScience':'int','Piloting':'dex','Profession':'wis','Profession2':'wis','SenseMotive':'wis','SleightOfHand':'dex','Stealth':'dex','Survival':'wis'}
@@ -81,8 +82,23 @@ class StarfinderCharacterObject:
       for i in stringList:
          if (i in self.effects):
             for j in self.effects[i]:
-               if j['type'] == i and j['lvl'] <= level:
+               if j['type'] == i and self._getEffectLevel(j) <= level:
                   sum += j['value']
+      return sum
+
+   def _getNumericSumOfGreatestOfEffectsAtLevel(self,level,stringList):
+      sum = 0
+      effectList = {}
+      for i in stringList:
+         if (i in self.effects):
+            for j in self.effects[i]:
+               if j['type'] == i and self._getEffectLevel(j) <= level:
+                  if not(i in effectList):
+                     effectList[i] = j['value']
+                  if j['value'] > effectList[i]:
+                     effectList[i] = j['value']
+      for i in effectList:
+         sum += effectList[i]
       return sum
 
    def _getNumericSumOfEffectsOnlyAtLevel(self,level,stringList):
@@ -90,16 +106,24 @@ class StarfinderCharacterObject:
       for i in stringList:
          if (i in self.effects):
             for j in self.effects[i]:
-               if j['type'] == i and j['lvl'] == level:
+               if j['type'] == i and self._getEffectLevel(j) == level:
                   sum += j['value']
       return sum
+      
+   def _getEffectLevel(self,effect):
+      if 'lvl' in effect:
+         return effect['lvl']
+      if 'classlvl' in effect:
+         return 0
+      print('EFFECT HAS NO LEVEL!!',effect)
+      return 0
 
    def _getCountCommonEffectsAtLevel(self,level,stringList):
       sum = 0
       for i in stringList:
          if (i in self.effects):
             for j in self.effects[i]:
-               if j['type'] == i and j['lvl'] <= level:
+               if j['type'] == i and self._getEffectLevel(j) <= level:
                   sum += 1
       return sum
 
@@ -108,10 +132,11 @@ class StarfinderCharacterObject:
       for i in stringList:
          if (i in self.effects):
             for j in self.effects[i]:
-               if j['type'] == i and j['lvl'] <= level:
+               if j['type'] == i and self._getEffectLevel(j) <= level:
                   list.append(j)
       return list
 
+   # We should do something about classlvl and lvl...
    def _addBonusesToEffectsFromObj(self, obj):
       for bonus in obj['bonus']:
          if 'class' in bonus:
@@ -275,6 +300,57 @@ class StarfinderCharacterObject:
                      descriptionString += '\n'
                   first = False
                   descriptionString += line
+      if obj['type'] == 'spell':
+         descriptionString += obj['name'].upper()
+         descriptionString += '\n'
+         if ('shortdescription' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += obj['shortdescription']
+         if ('castingtime' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Casting Time: '
+            descriptionString += obj['castingtime']
+         if ('range' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Range: '
+            descriptionString += obj['range']
+         if ('area' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Area: '
+            descriptionString += obj['area']
+         if ('effect' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Effect: '
+            descriptionString += obj['effect']
+         if ('targets' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Targets: '
+            descriptionString += obj['targets']
+         if ('duration' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Duration: '
+            descriptionString += obj['duration']
+         if ('savingthrow' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Saving Throw: '
+            descriptionString += obj['savingthrow']
+         if ('spellresistance' in obj):
+            descriptionString += '\n'
+            # descriptionString += '\n'
+            descriptionString += 'Spell Reistance: '
+            descriptionString += obj['spellresistance']
+         if ('longdescription' in obj):
+            descriptionString += '\n'
+            descriptionString += '\n'
+            descriptionString += obj['longdescription']
       if descriptionString == '':
          descriptionString += 'No Description Available.'
       if 'copyright' in obj:
@@ -282,6 +358,26 @@ class StarfinderCharacterObject:
          descriptionString += '\n'
          descriptionString += obj['copyright']
       return descriptionString
+
+   def get_spells_known_dict_at_level(self, lvl):
+      spell_arrays = self._getEffectsAtLevel(lvl,['spellsknown'])
+      spells_known_dict = {}
+      for sa in spell_arrays:
+         if not(sa['spelllist'] in spells_known_dict):
+            spells_known_dict[sa['spelllist']] = [0]*9
+         for i in range(len(sa['value'])):
+            spells_known_dict[sa['spelllist']][i] += sa['value'][i]
+      return spells_known_dict
+
+   def get_spells_per_day_dict_at_level(self, lvl):
+      spell_arrays = self._getEffectsAtLevel(lvl,['spellsperday'])
+      spells_known_dict = {}
+      for sa in spell_arrays:
+         if not(sa['spelllist'] in spells_known_dict):
+            spells_known_dict[sa['spelllist']] = [0]*9
+         for i in range(len(sa['value'])):
+            spells_known_dict[sa['spelllist']][i] += sa['value'][i]
+      return spells_known_dict
 
    ##########################################################################
    ###################################TODO###################################
@@ -746,7 +842,9 @@ class StarfinderCharacterObject:
       csb = self.classSkillBonuses
       for skill in self.skillStringList:
          skillBonusStr = skill.lower().replace(' ','')+'bonus'
+         skillInsightBonusStr = skill.lower().replace(' ','')+'insightbonus'
          skillDict[skill] =  self._getNumericSumOfEffectsAtLevel(self.setLevel,[skillBonusStr])
+         skillDict[skill] +=  self._getNumericSumOfGreatestOfEffectsAtLevel(self.setLevel,[skillInsightBonusStr])
       return skillDict
 
    @property
@@ -930,6 +1028,10 @@ class StarfinderCharacterObject:
    @property
    def overburdenedBulk(self):
       return self.strScore
+      
+   @property
+   def spells(self):
+      return self._spells
 
    def get_pdf_array(self):
       cd = {}
@@ -1040,6 +1142,9 @@ class StarfinderCharacterObject:
       cd['feats'] = self.featStringList
       for skill in skills:
          cd[skill.lower()+'classskill'] = (skill in self.classSkills)
+      cd['spells'] = self.spells[self.setLevel-1]
+      cd['spellsknown'] = self.get_spells_known_dict_at_level(self.setLevel)
+      cd['spellsperday'] = self.get_spells_per_day_dict_at_level(self.setLevel)
       return cd
 
    def save(self, filename):
