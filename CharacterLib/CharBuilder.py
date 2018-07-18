@@ -109,7 +109,7 @@ class StarfinderCharacterObject:
                if j['type'] == i and self._getEffectLevel(j) == level:
                   sum += j['value']
       return sum
-      
+
    def _getEffectLevel(self,effect):
       if 'lvl' in effect:
          return effect['lvl']
@@ -823,6 +823,18 @@ class StarfinderCharacterObject:
       classSkillBonuses = self._getEffectsAtLevel(self.setLevel,['classskill'])
       for csb in classSkillBonuses:
          classSkills.append(csb['value'])
+      for skill in self.skillStringList:
+         skillFirstLevelClassSkillBonusStr = skill.lower().replace(' ','')+'firstlevelclassskillbonus'
+         if ((self._getNumericSumOfGreatestOfEffectsAtLevel(self.setLevel,[skillFirstLevelClassSkillBonusStr,])) > 0 and not(skill in classSkills)):
+            classSkills.append(skill)
+      return classSkills
+
+   @property
+   def firstLevelClassSkills(self):
+      classSkills = []
+      classSkillBonuses = self._getEffectsAtLevel(1,['classskill'])
+      for csb in classSkillBonuses:
+         classSkills.append(csb['value'])
       return classSkills
 
    @property
@@ -839,12 +851,21 @@ class StarfinderCharacterObject:
    @property
    def miscSkillBonuses(self):
       skillDict = {}
+      noRankBonus =  self._getNumericSumOfEffectsAtLevel(self.setLevel,['norankskillbonus'])
+      skillRanks = self.skillRanks
       csb = self.classSkillBonuses
+      firstLevelClassSkills = self.firstLevelClassSkills
       for skill in self.skillStringList:
          skillBonusStr = skill.lower().replace(' ','')+'bonus'
          skillInsightBonusStr = skill.lower().replace(' ','')+'insightbonus'
+         skillRacialBonusStr = skill.lower().replace(' ','')+'racialbonus'
+         skillFirstLevelClassSkillBonusStr = skill.lower().replace(' ','')+'firstlevelclassskillbonus'
          skillDict[skill] =  self._getNumericSumOfEffectsAtLevel(self.setLevel,[skillBonusStr])
-         skillDict[skill] +=  self._getNumericSumOfGreatestOfEffectsAtLevel(self.setLevel,[skillInsightBonusStr])
+         skillDict[skill] +=  self._getNumericSumOfGreatestOfEffectsAtLevel(self.setLevel,[skillInsightBonusStr,skillRacialBonusStr,])
+         if (skillRanks[skill] == 0):
+            skillDict[skill] += noRankBonus
+         if (skill in firstLevelClassSkills):
+            skillDict[skill] +=  self._getNumericSumOfGreatestOfEffectsAtLevel(self.setLevel,[skillFirstLevelClassSkillBonusStr,])
       return skillDict
 
    @property
@@ -1024,11 +1045,13 @@ class StarfinderCharacterObject:
       return 0
    @property
    def encumberedBulk(self):
-      return int(self.strScore/2)
+      strbonus = self._getNumericSumOfEffectsAtLevel(self.setLevel,['strbulkbonus'])
+      return int((self.strScore+strbonus)/2)
    @property
    def overburdenedBulk(self):
-      return self.strScore
-      
+      strbonus = self._getNumericSumOfEffectsAtLevel(self.setLevel,['strbulkbonus'])
+      return self.strScore + strbonus
+
    @property
    def spells(self):
       return self._spells
