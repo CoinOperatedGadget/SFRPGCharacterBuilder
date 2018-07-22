@@ -55,12 +55,23 @@ class ResourceManager:
    def get_item_by_name(self,name):
       for i in self.all:
          if name == i['name']:
-            newCopy = {}
-            for j in i:
-               newCopy[j] = i[j]
-            return newCopy
+            return self.make_new_copy_of_item(i)
             # return copy.deepcopy(i)
       return None
+
+   def get_item_by_name_and_type(self,name,type='any'):
+      for i in self.get_items_by_type_and_subtype(type=type):
+         if name == i['name']:
+            return self.make_new_copy_of_item(i)
+            # return copy.deepcopy(i)
+      return None
+      
+   def make_new_copy_of_item(self,item):
+      newCopy = {}
+      for j in item:
+         newCopy[j] = item[j]
+      return newCopy
+      
 
    def get_items_by_type_and_subtype(self,type='any',subtype='any'):
       itemList = []
@@ -77,6 +88,8 @@ class ResourceManager:
          searchList = self.feats
       if (type == 'ability'):
          searchList = self.abilities
+      if (type == 'spell'):
+         searchList = self.spells
       if (subtype == 'any'):
          return searchList
 

@@ -10,7 +10,7 @@
             ActionView:
                 use_separator: True
                 ActionPrevious:
-                    title: ' '
+                    title: 'SFRPG CG'
                     with_previous: False
                     #app_icon_width: 1
                     #app_icon_height: 0
@@ -19,6 +19,7 @@
                     id: setupbut
                     text: 'Setup'
                     on_release: app.switch_screen('Setup')
+                    icon: './app_resources/icon6.png'
                 ActionButton:
                     id: genbut
                     text: 'General'
@@ -28,10 +29,12 @@
                     id: classbut
                     text: 'Classes'
                     on_release: app.switch_screen('Classes')
+                    icon: './app_resources/icon4.png'
                 ActionButton:
                     id: featsbut
                     text: 'Feats'
                     on_release: app.switch_screen('Feats')
+                    icon: './app_resources/icon5.png'
                 ActionButton:
                     text: 'Abilities'
                     icon: './app_resources/icon3.png'
@@ -39,9 +42,11 @@
                 ActionButton:
                     text: 'Skills'
                     on_release: app.switch_screen('Skills')
+                    icon: './app_resources/icon7.png'
                 ActionButton:
                     text: 'Spells'
                     on_release: app.switch_screen('Spells')
+                    icon: './app_resources/icon8.png'
                 ActionButton:
                     text: 'Equipment'
                     icon: './app_resources/icon1.png'

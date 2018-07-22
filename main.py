@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+os.environ['KIVY_TEXT'] = 'sdl2'
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -174,10 +176,12 @@ class AbilitySelector(BoxLayout):
    def ability_popup_cb(self, ability):
       self.abilityWidget.text = 'Select '+self.abilityBonus['value']
       self.abilityWidget.background_color = (1.0, 1.0, 0.0, 1.0)
+      newAbilityCopy = ability
       if (ability != None):
          self.abilityWidget.text = ability['name']
          self.abilityWidget.background_color = (1.0, 1.0, 1.0, 1.0)
-      self.character.add_ability(ability,self.abilityBonus)
+         newAbilityCopy = self.rm.make_new_copy_of_item(ability)
+      self.character.add_ability(newAbilityCopy,self.abilityBonus)
       self.refresh_cb()
 
 class FeatSelector(BoxLayout):
@@ -527,7 +531,9 @@ class SpellScreen(TabScreen):
             button.bind(on_press = self.open_popup)
             button.spelllist = sk
             button.spellarray = spellsKnownDict[sk]
+            button.lvl = lvl
             self.ids.spellbuttoncontainer.add_widget(button)
+            self.widgetList.append(button)
 
    def refresh_screen(self, *args):
       self.update_spell_widgets()
@@ -535,6 +541,7 @@ class SpellScreen(TabScreen):
    def open_popup(self, button, *args):
       self.popup.spellList = button.spelllist
       self.popup.spellArray = button.spellarray
+      self.popup.level = button.lvl
       self.popup.refresh()
       self.popup.open()
 
@@ -553,6 +560,7 @@ class SpellPopup(Popup):
       self.choiceLabel = None
       self.displaySpellChoiceItem = None
       self.spellNames = [[],[],[],[],[],[],[],]
+      self.bonusSpellNames = [[],[],[],[],[],[],[],]
       super(SpellPopup, self).__init__(*args)
       Clock.schedule_once(self._setup_options)
 
@@ -578,19 +586,32 @@ class SpellPopup(Popup):
             sci.selectcb = self.select_spell
             sci.panel = panel
             sci.spell = spell
+            sci.bonusSpell = False
             if spell['name'] in self.spellNames[panel]:
                sci.ids.spellcheckbox.active = True
+            if spell['name'] in self.bonusSpellNames[panel]:
+               sci.ids.spellcheckbox.active = True
+               sci.ids.spellcheckbox.disabled = True
+               sci.ids.spelllabel.text = sci.ids.spelllabel.text + ' (Already known as bonus spell)'
+               sci.bonusSpell = True
             # self.activeSpellPanels[panel].ids.choicelist.add_widget(sci)
             self.activeSpellPanels[panel].add_spell_choice_item_widget(sci)
 
    def update_spell_name_list(self):
       spellNames = [[],[],[],[],[],[],[],]
-      spells = self.character.spells[self.level-1]
+      spells = self.character.chosenSpells[self.level-1]
       for spellList in spells:
          for i in range(min(len(spells[spellList]),7)):
             for j in range(min(len(spells[spellList][i]),7)):
                spellNames[i].append(spells[spellList][i][j]['name'])
       self.spellNames = spellNames
+      spellNames = [[],[],[],[],[],[],[],]
+      spells = self.character.get_bonus_spells_known_dict_at_level(self.level)
+      for spellList in spells:
+         for i in range(min(len(spells[spellList]),7)):
+            for j in range(min(len(spells[spellList][i]),7)):
+               spellNames[i].append(spells[spellList][i][j]['name'])
+      self.bonusSpellNames = spellNames
 
    def refresh(self):
       for asp in self.activeSpellPanels:
@@ -639,7 +660,7 @@ class SpellPopup(Popup):
       spellArray = []
       for i in range(len(self.activeSpellPanels)):
          spellArray.append(self.activeSpellPanels[i].get_selected_spells())
-      self.character.spells[self.level-1][self.spellList] = spellArray
+      self.character.chosenSpells[self.level-1][self.spellList] = spellArray
       # Add them to character here...
       self.dismiss()
 
@@ -663,21 +684,22 @@ class SpellChoicePanel(TabbedPanelItem):
       numSelected = 0
       # for widget in self.ids.choicelist.children:
       for widget in self.spellChoiceItemArray:
-         if widget.ids.spellcheckbox.active:
+         if widget.ids.spellcheckbox.active and not(widget.bonusSpell):
             numSelected += 1
       return numSelected
    def get_selected_spells(self):
       spellList = []
       # for widget in self.ids.choicelist.children:
       for widget in self.spellChoiceItemArray:
-         if widget.ids.spellcheckbox.active:
+         if widget.ids.spellcheckbox.active and not(widget.bonusSpell):
             spellList.append(widget.spell)
       return spellList
    def clear_selected_spells(self):
       numSelected = 0
       # for widget in self.ids.choicelist.children:
       for widget in self.spellChoiceItemArray:
-         widget.ids.spellcheckbox.active = False
+         if not(widget.bonusSpell):
+            widget.ids.spellcheckbox.active = False
       return numSelected
 
 class SpellChoiceItem(GridLayout):
@@ -758,22 +780,25 @@ class GeneralScreen(TabScreen):
       self.character.player = self.ids.player.text
 
    def print_stuff(self):
-      print('\n\nEFFECTS!',self.character.effects)
-      print('\n\nCLASSES!')
-      for i in self.character.classes:
-         print(i['name'])
-      print()
-      print('FEATS!')
-      for a in self.character.feats:
-         print(a['name'],a['prerequisites'])
-      print()
+      # print('\n\nEFFECTS!',self.character.effects)
+      # print('\n\nCLASSES!')
+      # for i in self.character.classes:
+         # print(i['name'])
+      # print()
+      # print('FEATS!')
+      # for a in self.character.feats:
+         # print(a['name'],a['prerequisites'])
+      # print()
       print('ABILITIES!')
       for a in self.character.abilities:
-         print(a['name'])
-      print()
-      print('EFFECTS!')
-      for a in self.character.effects:
-         print(a['type'],a['value'])
+         # print(a['name'])
+         for d in a:
+            print(d,a[d])
+         print()
+      # print()
+      # print('EFFECTS!')
+      # for a in self.character.effects:
+         # print(a['type'],a['value'])
 
 class RootWidget(FloatLayout):
    '''This is the class representing your root widget.

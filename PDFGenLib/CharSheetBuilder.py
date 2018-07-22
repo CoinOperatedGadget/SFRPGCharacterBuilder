@@ -1592,6 +1592,8 @@ def MakeSFCS(CharacterDict):
       for i in range(min(len(cd['spells'][spellList]),7)):
          for j in range(min(len(cd['spells'][spellList][i]),7)):
             SpellNames[i].append(cd['spells'][spellList][i][j]['name'])
+   print(cd['spells'])
+   print(SpellNames)
    SpellLabel = ['0','1ST','2ND','3RD','4TH','5TH','6TH']
    ylevel = 0.93
    for i in range(7):
